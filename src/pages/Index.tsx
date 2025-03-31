@@ -11,15 +11,33 @@ import { FileDown, Mic, BarChart2, Database, Menu, X } from 'lucide-react';
 const Index: React.FC = () => {
   const records = useStore((state) => state.records);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [activeItem, setActiveItem] = useState('data-entry'); // Track active menu item
   
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
 
-  const SidebarItem = ({ icon: Icon, label }: { icon: React.ElementType; label: string }) => (
+  const handleMenuItemClick = (itemId: string) => {
+    setActiveItem(itemId);
+    // On mobile, close the sidebar after navigation
+    if (window.innerWidth < 768) {
+      setSidebarOpen(false);
+    }
+  };
+
+  const SidebarItem = ({ 
+    icon: Icon, 
+    label, 
+    id 
+  }: { 
+    icon: React.ElementType; 
+    label: string;
+    id: string;
+  }) => (
     <Button 
       variant="ghost" 
-      className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} mb-1`}
+      className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} mb-1 ${activeItem === id ? 'bg-accent text-accent-foreground' : ''}`}
+      onClick={() => handleMenuItemClick(id)}
     >
       <Icon className="h-5 w-5 mr-2" />
       {sidebarOpen && <span>{label}</span>}
@@ -49,10 +67,10 @@ const Index: React.FC = () => {
           )}
         </div>
         <div className="p-2 flex-1">
-          <SidebarItem icon={Database} label="Data Entry" />
-          <SidebarItem icon={BarChart2} label="Analytics" />
-          <SidebarItem icon={Mic} label="Audio Analysis" />
-          <SidebarItem icon={FileDown} label="Export Data" />
+          <SidebarItem icon={Database} label="Data Entry" id="data-entry" />
+          <SidebarItem icon={BarChart2} label="Analytics" id="analytics" />
+          <SidebarItem icon={Mic} label="Audio Analysis" id="audio" />
+          <SidebarItem icon={FileDown} label="Export Data" id="export" />
         </div>
         <div className="p-4 border-t">
           {sidebarOpen ? (
