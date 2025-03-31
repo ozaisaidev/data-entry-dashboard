@@ -1,17 +1,25 @@
 
 import React, { useState } from 'react';
 import { useStore } from '@/lib/store';
+import { useNavigate, useLocation } from 'react-router-dom';
 import DashboardHeader from '@/components/DashboardHeader';
-import DataEntryForm from '@/components/DataEntryForm';
-import DataTable from '@/components/DataTable';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { FileDown, Mic, BarChart2, Database, Menu, X } from 'lucide-react';
+import DataEntry from './DataEntry';
+import Analytics from './Analytics';
+import AudioAnalysis from './AudioAnalysis';
+import ExportData from './ExportData';
 
 const Index: React.FC = () => {
   const records = useStore((state) => state.records);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [activeItem, setActiveItem] = useState('data-entry'); // Track active menu item
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Extract the active path from the URL
+  const path = location.pathname.substring(1) || 'data-entry';
+  const [activeItem, setActiveItem] = useState(path); 
   
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -19,6 +27,10 @@ const Index: React.FC = () => {
 
   const handleMenuItemClick = (itemId: string) => {
     setActiveItem(itemId);
+    
+    // Navigate to the appropriate route
+    navigate(`/${itemId === 'data-entry' ? '' : itemId}`);
+    
     // On mobile, close the sidebar after navigation
     if (window.innerWidth < 768) {
       setSidebarOpen(false);
@@ -43,6 +55,20 @@ const Index: React.FC = () => {
       {sidebarOpen && <span>{label}</span>}
     </Button>
   );
+
+  // Render the selected component based on activeItem
+  const renderContent = () => {
+    switch (activeItem) {
+      case 'analytics':
+        return <Analytics />;
+      case 'audio':
+        return <AudioAnalysis />;
+      case 'export':
+        return <ExportData />;
+      default:
+        return <DataEntry />;
+    }
+  };
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -90,55 +116,8 @@ const Index: React.FC = () => {
       <div className="flex-1 flex flex-col overflow-hidden">
         <DashboardHeader toggleSidebar={toggleSidebar} />
         
-        <div className="flex-1 overflow-auto p-6">
-          <div className="container mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-              <Card className="industrial-card bg-industrial-blue text-white">
-                <CardContent className="pt-6">
-                  <h3 className="font-semibold">Total Motors</h3>
-                  <p className="text-3xl font-bold mt-2">{records.length}</p>
-                  <p className="text-sm opacity-70 mt-1">Records in database</p>
-                </CardContent>
-              </Card>
-              <Card className="industrial-card bg-industrial-teal text-white">
-                <CardContent className="pt-6">
-                  <h3 className="font-semibold">Good Status</h3>
-                  <p className="text-3xl font-bold mt-2">
-                    {records.filter(r => r.status === 'Good').length}
-                  </p>
-                  <p className="text-sm opacity-70 mt-1">Passing quality control</p>
-                </CardContent>
-              </Card>
-              <Card className="industrial-card bg-industrial-orange text-white">
-                <CardContent className="pt-6">
-                  <h3 className="font-semibold">Audio Files</h3>
-                  <p className="text-3xl font-bold mt-2">
-                    {records.reduce((acc, record) => 
-                      acc + Object.values(record.audioFiles).filter(Boolean).length, 0
-                    )}
-                  </p>
-                  <p className="text-sm opacity-70 mt-1">Recordings uploaded</p>
-                </CardContent>
-              </Card>
-              <Card className="industrial-card bg-industrial-dark text-white">
-                <CardContent className="pt-6">
-                  <h3 className="font-semibold">Not Good</h3>
-                  <p className="text-3xl font-bold mt-2">
-                    {records.filter(r => r.status === 'Not Good').length}
-                  </p>
-                  <p className="text-sm opacity-70 mt-1">Failing quality control</p>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="mb-6">
-              <DataEntryForm />
-            </div>
-
-            <div>
-              <DataTable records={records} />
-            </div>
-          </div>
+        <div className="flex-1 overflow-auto">
+          {renderContent()}
         </div>
       </div>
     </div>
