@@ -48,11 +48,11 @@ const Index: React.FC = () => {
   }) => (
     <Button 
       variant="ghost" 
-      className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} mb-1 ${activeItem === id ? 'bg-accent text-accent-foreground' : ''}`}
+      className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} mb-1 ${activeItem === id ? 'bg-accent text-accent-foreground' : ''} transition-all duration-300 hover:scale-105`}
       onClick={() => handleMenuItemClick(id)}
     >
-      <Icon className="h-5 w-5 mr-2" />
-      {sidebarOpen && <span>{label}</span>}
+      <Icon className={`h-5 w-5 mr-2 transition-all duration-300 ${activeItem === id ? 'text-accent-foreground' : ''}`} />
+      {sidebarOpen && <span className="animate-fade-in">{label}</span>}
     </Button>
   );
 
@@ -72,22 +72,22 @@ const Index: React.FC = () => {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      {/* Sidebar */}
+      {/* Sidebar with animation */}
       <div 
-        className={`bg-card border-r transition-all duration-300 flex flex-col ${
+        className={`bg-card border-r transition-all duration-300 ease-in-out flex flex-col ${
           sidebarOpen ? 'w-64' : 'w-16'
         }`}
       >
         <div className="p-4 flex items-center justify-between border-b">
           {sidebarOpen ? (
             <>
-              <h2 className="font-bold text-lg">Factory App</h2>
-              <Button variant="ghost" size="sm" onClick={toggleSidebar}>
+              <h2 className="font-bold text-lg animate-fade-in">Factory App</h2>
+              <Button variant="ghost" size="sm" onClick={toggleSidebar} className="transition-transform hover:rotate-90 duration-300">
                 <X className="h-5 w-5" />
               </Button>
             </>
           ) : (
-            <Button variant="ghost" size="sm" onClick={toggleSidebar} className="mx-auto">
+            <Button variant="ghost" size="sm" onClick={toggleSidebar} className="mx-auto transition-transform hover:rotate-180 duration-300">
               <Menu className="h-5 w-5" />
             </Button>
           )}
@@ -100,23 +100,23 @@ const Index: React.FC = () => {
         </div>
         <div className="p-4 border-t">
           {sidebarOpen ? (
-            <div className="text-xs text-muted-foreground">
+            <div className="text-xs text-muted-foreground animate-fade-in">
               <p>v1.0.0</p>
               <p>© 2023 Factory Solutions</p>
             </div>
           ) : (
             <div className="flex justify-center">
-              <div className="h-6 w-6 bg-industrial-teal rounded-full"></div>
+              <div className="h-6 w-6 bg-industrial-teal rounded-full animate-pulse-slow"></div>
             </div>
           )}
         </div>
       </div>
 
-      {/* Main content */}
+      {/* Main content with animation */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <DashboardHeader toggleSidebar={toggleSidebar} />
         
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-auto animate-fade-in">
           {renderContent()}
         </div>
       </div>

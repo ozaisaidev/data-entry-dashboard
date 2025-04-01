@@ -26,7 +26,7 @@ const DataTable: React.FC<DataTableProps> = ({ records }) => {
       </CardHeader>
       <CardContent>
         {records.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
+          <div className="text-center py-8 text-muted-foreground animate-pulse-slow">
             <p>No records have been entered yet.</p>
             <p className="text-sm">Submit data using the form above to see it displayed here.</p>
           </div>
@@ -34,7 +34,7 @@ const DataTable: React.FC<DataTableProps> = ({ records }) => {
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow>
+                <TableRow className="bg-muted/50">
                   <TableHead>Motor ID</TableHead>
                   <TableHead>Gear ID</TableHead>
                   <TableHead>Vehicle S/N</TableHead>
@@ -45,11 +45,18 @@ const DataTable: React.FC<DataTableProps> = ({ records }) => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {records.map((record) => {
+                {records.map((record, index) => {
                   const audioCount = Object.values(record.audioFiles).filter(Boolean).length;
                   
                   return (
-                    <TableRow key={record.id}>
+                    <TableRow 
+                      key={record.id} 
+                      className="transition-all hover:bg-accent/10 hover:scale-[1.01] cursor-pointer"
+                      style={{ 
+                        animationDelay: `${index * 0.05}s`,
+                        animation: 'fade-in 0.5s ease-out forwards'
+                      }}
+                    >
                       <TableCell className="font-medium">{record.motorId}</TableCell>
                       <TableCell>{record.gearId}</TableCell>
                       <TableCell>{record.vehicleSerialNumber}</TableCell>
@@ -57,7 +64,7 @@ const DataTable: React.FC<DataTableProps> = ({ records }) => {
                       <TableCell>
                         <Badge 
                           variant={record.status === 'Good' ? 'default' : 'destructive'}
-                          className="whitespace-nowrap"
+                          className="whitespace-nowrap animate-pulse-slow"
                         >
                           {record.status === 'Good' ? (
                             <Check className="h-3 w-3 mr-1" />
