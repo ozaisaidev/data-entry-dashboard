@@ -1,70 +1,71 @@
 
-// This is a sample AWS Lambda function for processing and uploading CSV data to S3
-// Note: This file is for reference only and would be deployed to AWS Lambda, not used in the frontend
+// This file serves as a proxy between the frontend and the AWS Lambda function
+// It converts the data to CSV format and sends it to the API Gateway
 
-const AWS = require('aws-sdk');
-const s3 = new AWS.S3();
-
-// Configure these parameters in Lambda environment variables
-const S3_BUCKET = process.env.S3_BUCKET || 'motor-data-bucket';
-const DEFAULT_FILENAME = process.env.DEFAULT_FILENAME || 'motor-data';
-
+/**
+ * Handler function to process motor data and upload to S3
+ * @param {Object} event - The event object containing motor data
+ * @returns {Object} - Response from the Lambda function
+ */
 exports.handler = async (event) => {
   try {
     // Parse the request body
-    const body = JSON.parse(event.body);
-    const csvData = body.csv_data;
+    const { csv_data } = JSON.parse(event.body || '{}');
     
-    if (!csvData) {
+    // If there's no CSV data, return an error
+    if (!csv_data) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: 'CSV data is required' }),
         headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*', // For CORS support
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json'
         },
+        body: JSON.stringify({ error: 'Missing CSV data' })
       };
     }
+
+    // Convert CSV data to base64 for transmission
+    const csv_base64 = Buffer.from(csv_data).toString('base64');
     
-    // Generate a unique filename with timestamp
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const filename = `${DEFAULT_FILENAME}-${timestamp}.csv`;
+    // Prepare payload for AWS Lambda
+    const payload = { csv_base64 };
     
-    // Upload the CSV data to S3
-    const params = {
-      Bucket: S3_BUCKET,
-      Key: filename,
-      Body: csvData,
-      ContentType: 'text/csv',
-    };
-    
-    await s3.putObject(params).promise();
-    
-    // Return success response
-    return {
-      statusCode: 200,
-      body: JSON.stringify({
-        message: 'Data uploaded successfully',
-        filename: filename,
-        timestamp: new Date().toISOString(),
-        recordCount: csvData.split('\n').length - 1, // Subtract 1 for header row
-      }),
+    // API Gateway URL would be set in environment variables in production
+    // This is a placeholder URL
+    const API_URL = process.env.API_GATEWAY_URL || 'https://your-api-gateway-endpoint.amazonaws.com/dev/upload';
+
+    // Call the Lambda function through API Gateway
+    const response = await fetch(API_URL, {
+      method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*', // For CORS support
+        'Content-Type': 'application/json'
       },
+      body: JSON.stringify(payload)
+    });
+
+    // Get the response data
+    const data = await response.json();
+
+    // Return the response from the Lambda function
+    return {
+      statusCode: response.status,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
     };
   } catch (error) {
-    console.error('Error processing CSV data:', error);
+    console.error('Error processing data:', error);
     
     // Return error response
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Failed to process data' }),
       headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*', // For CORS support
+        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json'
       },
+      body: JSON.stringify({ error: 'Internal server error' })
     };
   }
 };

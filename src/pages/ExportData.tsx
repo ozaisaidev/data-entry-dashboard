@@ -55,6 +55,8 @@ const ExportData: React.FC = () => {
 
   // Function to convert data to CSV
   const convertToCSV = (data: any[]) => {
+    if (data.length === 0) return '';
+    
     // Create CSV header from object keys
     const headers = Object.keys(data[0] || {}).join(',');
     
@@ -74,6 +76,13 @@ const ExportData: React.FC = () => {
 
   // Function to handle S3/Lambda export
   const handleS3Export = async () => {
+    if (records.length === 0) {
+      toast.error('No data to export', {
+        description: 'Please add some records before exporting.'
+      });
+      return;
+    }
+    
     setS3Exporting(true);
     
     try {
@@ -85,16 +94,10 @@ const ExportData: React.FC = () => {
         csv_data: csvData
       };
       
-      // Call Lambda API endpoint
-      // Replace 'YOUR_LAMBDA_API_ENDPOINT' with the actual API endpoint
-      const LAMBDA_API_ENDPOINT = 'https://YOUR_LAMBDA_API_ENDPOINT';
+      // API endpoint from environment or default to a placeholder
+      // In production, this would be configured properly
+      const LAMBDA_API_ENDPOINT = import.meta.env.VITE_LAMBDA_API_ENDPOINT || '/api/upload';
       
-      // This would be replaced with actual API call
-      // For now we'll simulate with a delay
-      await new Promise(resolve => setTimeout(resolve, 1800));
-      
-      // Uncomment below for actual implementation
-      /* 
       const response = await fetch(LAMBDA_API_ENDPOINT, {
         method: 'POST',
         headers: {
@@ -108,7 +111,6 @@ const ExportData: React.FC = () => {
       }
       
       const result = await response.json();
-      */
       
       toast.success('Data uploaded to S3 successfully', {
         description: `${records.length} records have been processed and stored in S3.`
@@ -237,7 +239,7 @@ const ExportData: React.FC = () => {
           </CardContent>
         </Card>
         
-        {/* S3/Lambda Card */}
+        {/* S3/Lambda Card - Simplified */}
         <Card className="transition-all duration-300 hover:shadow-lg hover:-translate-y-1 animate-scale-in" style={{animationDelay: "0.3s"}}>
           <CardHeader>
             <CardTitle className="flex items-center">

@@ -1,6 +1,6 @@
 
-# Sample serverless.yml configuration
-# This would be used with the Serverless Framework to deploy the Lambda function
+# Serverless.yml configuration
+# This defines the AWS Lambda function and API Gateway integration
 
 service: motor-data-export
 
@@ -14,6 +14,7 @@ provider:
   environment:
     S3_BUCKET: motor-data-${opt:stage, 'dev'}
     DEFAULT_FILENAME: motor-data
+    API_GATEWAY_URL: ${env:API_GATEWAY_URL, ''}
     
   # Define IAM role for the Lambda function
   iamRoleStatements:
