@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useStore } from '@/lib/store';
 import { FileDown, Database, Cloud, RefreshCw, FileUp, FilePlus, Upload } from 'lucide-react';
@@ -15,6 +14,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
+import { processAndExportRecords } from '../backend';
 
 const ExportData: React.FC = () => {
   const records = useStore((state) => state.records);
@@ -24,20 +25,16 @@ const ExportData: React.FC = () => {
   const [oneDriveExporting, setOneDriveExporting] = useState(false);
   const [s3Exporting, setS3Exporting] = useState(false);
 
-  // Function to handle standard export formats (Excel/CSV)
   const handleExport = (format: string) => {
-    // This would be replaced with actual export functionality
     toast.success(`Data exported as ${format}`, {
       description: `${records.length} records exported successfully.`
     });
   };
 
-  // Function to handle OneDrive export
   const handleOneDriveExport = async () => {
     setOneDriveExporting(true);
     
     try {
-      // Simulate API call with a delay
       await new Promise(resolve => setTimeout(resolve, 1500));
       
       const mode = isAppendingOneDrive ? 'appended to' : 'uploaded as new';
@@ -53,28 +50,6 @@ const ExportData: React.FC = () => {
     }
   };
 
-  // Function to convert data to CSV
-  const convertToCSV = (data: any[]) => {
-    if (data.length === 0) return '';
-    
-    // Create CSV header from object keys
-    const headers = Object.keys(data[0] || {}).join(',');
-    
-    // Create CSV rows from values
-    const rows = data.map(item => 
-      Object.values(item).map(value => 
-        // Handle strings with commas by wrapping in quotes
-        typeof value === 'string' && value.includes(',') 
-          ? `"${value}"`
-          : String(value)
-      ).join(',')
-    );
-    
-    // Combine header and rows
-    return [headers, ...rows].join('\n');
-  };
-
-  // Function to handle S3/Lambda export
   const handleS3Export = async () => {
     if (records.length === 0) {
       toast.error('No data to export', {
@@ -86,36 +61,15 @@ const ExportData: React.FC = () => {
     setS3Exporting(true);
     
     try {
-      // Convert data to CSV format
-      const csvData = convertToCSV(records);
+      const result = await processAndExportRecords(records);
       
-      // Create payload for Lambda API
-      const payload = {
-        csv_data: csvData
-      };
-      
-      // API endpoint from environment or default to a placeholder
-      // In production, this would be configured properly
-      const LAMBDA_API_ENDPOINT = import.meta.env.VITE_LAMBDA_API_ENDPOINT || '/api/upload';
-      
-      const response = await fetch(LAMBDA_API_ENDPOINT, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (result.success) {
+        toast.success('Data uploaded to S3 successfully', {
+          description: `${records.length} records have been processed and stored in S3.`
+        });
+      } else {
+        throw new Error(result.message);
       }
-      
-      const result = await response.json();
-      
-      toast.success('Data uploaded to S3 successfully', {
-        description: `${records.length} records have been processed and stored in S3.`
-      });
-      
     } catch (error) {
       toast.error('S3 export failed', {
         description: 'Please check your connection and try again.'
@@ -171,7 +125,6 @@ const ExportData: React.FC = () => {
           </CardContent>
         </Card>
         
-        {/* OneDrive Card */}
         <Card className="transition-all duration-300 hover:shadow-lg hover:-translate-y-1 animate-scale-in" style={{animationDelay: "0.2s"}}>
           <CardHeader>
             <CardTitle className="flex items-center">
@@ -239,18 +192,17 @@ const ExportData: React.FC = () => {
           </CardContent>
         </Card>
         
-        {/* S3/Lambda Card - Simplified */}
         <Card className="transition-all duration-300 hover:shadow-lg hover:-translate-y-1 animate-scale-in" style={{animationDelay: "0.3s"}}>
           <CardHeader>
             <CardTitle className="flex items-center">
               <Database className="mr-2 h-5 w-5 text-green-500 animate-pulse-slow" />
-              Export to S3 via Lambda
+              Export to S3
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <p className="text-muted-foreground mb-4">
-                Upload your motor data to AWS S3 storage using Lambda function
+                Upload your motor data to cloud storage for secure backup and sharing
               </p>
               
               <Button 
