@@ -1,0 +1,50 @@
+
+# Sample serverless.yml configuration
+# This would be used with the Serverless Framework to deploy the Lambda function
+
+service: motor-data-export
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+  stage: ${opt:stage, 'dev'}
+  
+  # Define environment variables for the Lambda function
+  environment:
+    S3_BUCKET: motor-data-${opt:stage, 'dev'}
+    DEFAULT_FILENAME: motor-data
+    
+  # Define IAM role for the Lambda function
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:PutObject
+        - s3:GetObject
+      Resource: "arn:aws:s3:::motor-data-${opt:stage, 'dev'}/*"
+
+# Create resources using CloudFormation
+resources:
+  Resources:
+    MotorDataBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: motor-data-${opt:stage, 'dev'}
+        CorsConfiguration:
+          CorsRules:
+            - AllowedHeaders: ['*']
+              AllowedMethods: [GET, PUT, POST, DELETE]
+              AllowedOrigins: ['*']
+              MaxAge: 3000
+
+functions:
+  processAndUploadData:
+    handler: lambdaFunction.handler
+    description: Processes and uploads motor data to S3
+    timeout: 30 # seconds
+    memorySize: 128 # MB
+    events:
+      - http:
+          path: /upload
+          method: post
+          cors: true
